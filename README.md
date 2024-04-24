@@ -3,6 +3,17 @@
 Description: Provides an interesting look at downloading Wikipedia (English only)
 
 
+### Setup
+
+ - Python virtual environment (venv)
+ - Docker
+
+
+### Usage
+
+ - Lorem ipsum
+
+
 ### References
 
  - The [size of wikipedia](https://en.wikipedia.org/wiki/Wikipedia:Size_of_Wikipedia)

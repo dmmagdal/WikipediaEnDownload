@@ -36,6 +36,10 @@ def main():
 		"article-titles": "enwiki-latest-all-titles-in-ns0.gz",   	# Article titles only (with redirects)
 		"sha1sum": "enwiki-latest-sha1sums.txt",					# Sha1sums for latest wikis
 	}
+	base_mapping = {
+		key: value.lstrip("enwiki-latest-") 
+		for key, value in target_mapping.items()
+	}	# This is primarily for finding the right SHA1SUM in the SHA1SUM txt file
 
 	# Verify arguments.
 	target = args.target
@@ -48,6 +52,7 @@ def main():
 	# Folder and file path for downloads.
 	folder = "./CompressedDownloads"
 	base_file = target_mapping[target]
+	base_name = base_mapping[target]
 	local_filepath = os.path.join(folder, base_file)
 
 	if not os.path.exists(folder) or not os.path.isdir(folder):
@@ -95,11 +100,12 @@ def main():
 		print(f"Resquest returned {return_status} status code for {shasum_url}")
 		exit(1)
 
-	shasum_text = response.text
-	shasum_text_lines = shasum_text.split()
+	shasum_soup = BeautifulSoup(shasum_response.text, "lxml")
+	shasum_text = shasum_soup.get_text()
+	shasum_text_lines = shasum_text.split("\n")
 	sha1 = ""
 	for line in shasum_text_lines:
-		if base_file in line:
+		if base_name in line:
 			sha1 = line.split(" ")[0]
 	
 	if len(sha1) == 0:
@@ -151,8 +157,10 @@ def downloadFile(url: str, local_filepath: str, sha1: str) -> bool:
 				f.write(chunk)
 
 	# Return whether the file was successfully created.
-	print(hashSum(local_filepath))
-	return sha1 == hashSum(local_filepath)
+	new_sha1 = hashSum(local_filepath)
+	print(f"Expected SHA1: {sha1}")
+	print(f"Computed SHA1: {new_sha1}")
+	return sha1 == new_sha1
 
 
 def hashSum(local_filepath: str) -> str:
