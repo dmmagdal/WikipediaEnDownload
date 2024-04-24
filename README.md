@@ -26,4 +26,10 @@ Description: Provides an interesting look at downloading Wikipedia (English only
      - all-titles-in-ns0.gz –> Article titles only (with redirects)
      - SQL files for the pages and links are also available
      - All revisions, all pages: These files expand to multiple terabytes of text. Please only download these if you know you can cope with this quantity of data. Go to Latest Dumps and look out for all the files that have 'pages-meta-history' in their name.
- - Latest BeautifulSoup [documentation](https://beautiful-soup-4.readthedocs.io/en/latest/)
+ - BeautifulSoup [documentation](https://beautiful-soup-4.readthedocs.io/en/latest/)
+ - Documentation of native python module used:
+     - [argparse](https://docs.python.org/3.9/library/argparse.html)
+     - [bz2](https://docs.python.org/3.9/library/bz2.html)
+     - [gzip](https://docs.python.org/3.9/library/gzip.html)
+     - [hashlib](https://docs.python.org/3.9/library/hashlib.html)
+     - [os](https://docs.python.org/3.9/library/os.html)
