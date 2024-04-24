@@ -25,7 +25,8 @@ def main():
 
 	###################################################################
 	# CONSTANTS
-	#################################################################### Core URL to latest dump of wikipedia.
+	###################################################################
+	# Core URL to latest dump of wikipedia.
 	url = "https://dumps.wikimedia.org/enwiki/latest/"
 
 	# Different mappings of targets to files.
@@ -54,7 +55,6 @@ def main():
 	base_file = target_mapping[target]
 	base_name = base_mapping[target]
 	local_filepath = os.path.join(folder, base_file)
-
 	if not os.path.exists(folder) or not os.path.isdir(folder):
 		os.makedirs(folder, exist_ok=True)
 	
@@ -73,7 +73,6 @@ def main():
 
 	# Find the necessary link.
 	# links = soup.find_all('a')
-	# link_element = soup.find("a", text=base_file)
 	link_element = soup.find("a", string=base_file)
 	if link_element is None:
 		print(f"Could not find {base_file} in latest dump {url}")
@@ -85,7 +84,6 @@ def main():
 	# QUERY SHA1SUM
 	###################################################################
 	# Query the link for the shasums.
-	# shasum_element = soup.find("a", text=target_mapping["sha1sum"])
 	shasum_element = soup.find("a", string=target_mapping["sha1sum"])
 	if shasum_element is None:
 		print(f"Could not find {target_mapping['sha1sum']} in latest dump {url}")
@@ -177,7 +175,7 @@ def hashSum(local_filepath: str) -> str:
 
 	# Check for the file path to exist. Return an empty string if it
 	# does not exist.
-	if os.path.exists(local_filepath):
+	if not os.path.exists(local_filepath):
 		return ""
 
 	# Open the file.
