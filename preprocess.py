@@ -57,18 +57,30 @@ def main():
 		print(f"Target file {local_filepath} was not found.")
 		exit(1)
 
+	# Folder and file path for output data files.
+	output_folder = "./WikipediaData"
+	if not os.path.exists(output_folder) or not os.path.isdir(output_folder):
+		os.makedirs(output_folder, exist_ok=True)
+
 	###################################################################
 	# DECOMPRESSION
 	###################################################################
 	# Verify that the target file path is a supported compression
 	# format.
-	if not local_filepath.endswith(".gz") or not local_filepath.endswith(".bz2"):
+	if not local_filepath.endswith(".gz") and not local_filepath.endswith(".bz2"):
 		print(f"Target compressed file path {local_filepath} is not in a supported by this script. Supporting only '.bz2' and '.gz' compressed files only.")
 		exit(0)
 
 	# Decompress the compressed file (if necessary).
 	decompressed_filepath = local_filepath.rstrip(".gz").rstrip(".bz2")
 	if not os.path.exists(decompressed_filepath):
+		# Initialize the file decompression.
+		print("WARNING!")
+		print("The compressed files downloaded can be as large as 100GB when decompressed. Please make sure you have enough disk space before proceeding.")
+		confirmation = input("Proceed? [Y/n] ")
+		if confirmation not in ["Y", "y"]:
+			exit(0)
+
 		if local_filepath.endswith(".gz"):
 			decompress_gz(local_filepath)
 		elif local_filepath.endswith(".bz2"):
@@ -77,6 +89,33 @@ def main():
 	###################################################################
 	# PROCESSING
 	###################################################################
+	output_filepath = os.path.join(
+		output_folder, os.path.basename(decompressed_filepath)
+	)
+
+
+	###################################################################
+	# CLEAN UP
+	###################################################################
+	# Prompt on whether to delete the decompressed copies of the
+	# compressed files.
+	print("ALERT! (optional)")
+	print("Clean up the files by deleting the decompressed copies of the compressed files? This will save on disk space.")
+	confirmation = input("Delete? [Y/n] ")
+	if confirmation not in ["Y", "y"]:
+		exit(0)
+
+	# Delete the decompressed copies for the compressed files.
+	print("Deleting decompressed files...")
+	files = [
+		os.path.join(folder, file) for file in os.listdir(folder) 
+		if file.endswith(".xml")
+	]
+	for file in files:
+		os.remove(file)
+		print(f"Deleted {file}")
+
+	print("Done.")
 
 	# Exit the program.
 	exit(0)
