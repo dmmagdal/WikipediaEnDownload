@@ -51,10 +51,6 @@ def main():
 		key for key, value in target_mapping.items()
 		if value.endswith("bz2")
 	]
-	# base_mapping = {
-	# 	key: value.lstrip("enwiki-latest-") 
-	# 	for key, value in target_mapping.items()
-	# }	# This is primarily for finding the right SHA1SUM in the SHA1SUM txt file
 
 	# Verify arguments.
 	target = args.target
@@ -67,8 +63,6 @@ def main():
 	# Folder and file path for downloads.
 	folder = "./CompressedDownloads"
 	base_file = target_mapping[target]
-	# base_name = base_mapping[target]
-	# local_filepath = os.path.join(folder, base_file)
 	if not os.path.exists(folder) or not os.path.isdir(folder):
 		os.makedirs(folder, exist_ok=True)
 	
@@ -112,22 +106,15 @@ def main():
 		
 		link_element = [link_element]
 	
-	# link_url = [
-	# 	url + link.get("href") for link in link_element
-	# ]
-	# link_names = [
-	# 	link.get("href").lstrip("enwiki-latest-") 
-	# 	for link in link_element
-	# ]
-	dataset = {
+	# Map each file to the respective url, local filepath, and later
+	# SHA1SUM.
+	files = {
 		link.get("href").replace("enwiki-latest-", "") : [
 			url + link.get("href"), 												# link url
 			os.path.join(folder, link.get("href").replace("enwiki-latest-", "")),	# local filepath
 		] 
 		for link in link_element
 	}
-	
-	# assert None not in [link_element, link_url], "Expected to find some elements before querying SHA1SUM"
 
 	###################################################################
 	# QUERY SHA1SUM
@@ -150,24 +137,19 @@ def main():
 	shasum_soup = BeautifulSoup(shasum_response.text, "lxml")
 	shasum_text = shasum_soup.get_text()
 	shasum_text_lines = shasum_text.split("\n")
-	sha1_list = []
-	# for name in link_names:
-	for name in list(dataset.keys()):
+	for name in list(files.keys()):
 		sha1 = ""
 		for line in shasum_text_lines:
-			# if base_name in line:
 			if name in line:
 				sha1 = line.split(" ")[0]
 		
 		if len(sha1) == 0:
-			# print(f"Could not find SHA1SUM for {base_file}")
 			print(f"Could not find SHA1SUM for {name}")
 			if args.no_shasum:
 				print("Exited program due to inability to verify SHA1SUM.")
 				exit(1)
 
-		sha1_list.append(sha1)
-		dataset[name].append(sha1)
+		files[name].append(sha1)
 
 	###################################################################
 	# DOWNLOAD FILE
@@ -179,21 +161,12 @@ def main():
 	if confirmation not in ["Y", "y"]:
 		exit(0)
 
-	# print(f"Downloading {base_file} file...")
-	# download_status = downloadFile(link_url, local_filepath, sha1)
-
-	# Verify file download was successful.
-	# status = "successfully" if download_status else "not sucessfully"
-	# print(f"Target file {base_file} was {status} downloaded.")
-
-	# for name in link_names:
-	for name in list(dataset.keys()):
+	for name in list(files.keys()):
 		print(f"Downloading {name} file...")
-		# download_status = downloadFile(link_url[idx], local_filepath, sha1)
 		download_status = downloadFile(
-			dataset[name][0],	# link url
-			dataset[name][1], 	# local filepath
-			dataset[name][2]	# SHA1 hash
+			files[name][0],	# link url
+			files[name][1], 	# local filepath
+			files[name][2]	# SHA1 hash
 		)
 
 		# Verify file download was successful.
