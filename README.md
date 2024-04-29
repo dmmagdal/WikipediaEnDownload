@@ -21,6 +21,11 @@ Description: Provides an interesting look at downloading and processing Wikipedi
 ### Usage
 
  - Lorem ipsum
+ - Download Wikipedia data (`download.py`)
+     - `python download.py [target] --shard --no_shasum`
+     - `--shard`: Specify whether to download the `[target]` via its shards or 
+ - Preprocess the downloaded Wikipedia data (`preprocess.py`)
+     - 
 
 
 ### Notes
@@ -41,7 +46,10 @@ Description: Provides an interesting look at downloading and processing Wikipedi
              - Expect to use at least 8 GB of RAM for the decompression
      - It is advised for the "pages" downloads that you use the shard flag. This will download each piece in shards (the data is broken up into shards on the main link) and process the shards accordingly. This uses significantly less RAM than downloading the entire compressed file and allows for multiprocessing.
          - In this [blog post](https://blog.online-convert.com/what-are-tar-gz-and-bz2/), gz (gzip) is faster and more memory efficent while bz2 (bzip2) is slower but produces smaller compressed files. All pages are saved in bz2 compressed files to maximize compression.
- - 
+         - You may want to pass
+ - Parsing documents
+     - For pages-articles-multistream.xml files, each entry is contained within `<page>` tags
+     - For abstract.xml.gz, each entry is contained with `<doc>` tags
 
 
 ### References

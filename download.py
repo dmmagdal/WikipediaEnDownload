@@ -21,6 +21,16 @@ def main():
 		default="abstracts", 
 		help="Specify which (compressed) file you want to download. Default is 'abstracts'."
 	)
+	parser.add_argument(
+		"--shard",
+		action="store_true",
+		help="Specify whether to download the whole (compressed) file or the file in shards. Defaultis false/not specified."
+	)
+	parser.add_argument(
+		"--no_shasum",
+		action="store_false",
+		help="Specify whether to verify the (compressed) file download(s) with the respective SHA1SUM hash. Defaultis true/not specified."
+	)
 	args = parser.parse_args()
 
 	###################################################################
@@ -37,10 +47,14 @@ def main():
 		"article-titles": "enwiki-latest-all-titles-in-ns0.gz",   	# Article titles only (with redirects)
 		"sha1sum": "enwiki-latest-sha1sums.txt",					# Sha1sums for latest wikis
 	}
-	base_mapping = {
-		key: value.lstrip("enwiki-latest-") 
-		for key, value in target_mapping.items()
-	}	# This is primarily for finding the right SHA1SUM in the SHA1SUM txt file
+	has_shards = [
+		key for key, value in target_mapping.items()
+		if value.endswith("bz2")
+	]
+	# base_mapping = {
+	# 	key: value.lstrip("enwiki-latest-") 
+	# 	for key, value in target_mapping.items()
+	# }	# This is primarily for finding the right SHA1SUM in the SHA1SUM txt file
 
 	# Verify arguments.
 	target = args.target
@@ -53,8 +67,8 @@ def main():
 	# Folder and file path for downloads.
 	folder = "./CompressedDownloads"
 	base_file = target_mapping[target]
-	base_name = base_mapping[target]
-	local_filepath = os.path.join(folder, base_file)
+	# base_name = base_mapping[target]
+	# local_filepath = os.path.join(folder, base_file)
 	if not os.path.exists(folder) or not os.path.isdir(folder):
 		os.makedirs(folder, exist_ok=True)
 	
@@ -71,14 +85,49 @@ def main():
 	# Set up BeautifulSoup object.
 	soup = BeautifulSoup(response.text, "lxml")
 
-	# Find the necessary link.
-	# links = soup.find_all('a')
-	link_element = soup.find("a", string=base_file)
-	if link_element is None:
-		print(f"Could not find {base_file} in latest dump {url}")
-		exit(1)
+	# Find the necessary link(s).
+	if args.shard and target in has_shards:
+		# Split target file at the (compression) file extension. Note
+		# that the only compressed file extension supported is .bz2.
+		# See README.md Notes for more details.
+		file_strings = base_file.split(".xml.bz2")
+		file_strings[-1] = ".xml.bz2"
+		assert len(file_strings) == 2, f"Expected target file {base_file} to split evenly on .xml.bz2: Received {file_strings}"
 
-	link_url = url + link_element.get("href")
+		# Get a list of links from the main page.
+		links = soup.find_all("a")
+		link_element = [
+			link for link in links
+			if file_strings[0] in link.text \
+				and "-rss.xml" not in link.get('href') \
+				and "index" not in link.get('href') \
+				and base_file not in link.get('href')
+		]
+	else:
+		# Get only the link for the specific file.
+		link_element = soup.find("a", string=base_file)
+		if link_element is None:
+			print(f"Could not find {base_file} in latest dump {url}")
+			exit(1)
+		
+		link_element = [link_element]
+	
+	# link_url = [
+	# 	url + link.get("href") for link in link_element
+	# ]
+	# link_names = [
+	# 	link.get("href").lstrip("enwiki-latest-") 
+	# 	for link in link_element
+	# ]
+	dataset = {
+		link.get("href").replace("enwiki-latest-", "") : [
+			url + link.get("href"), 												# link url
+			os.path.join(folder, link.get("href").replace("enwiki-latest-", "")),	# local filepath
+		] 
+		for link in link_element
+	}
+	
+	# assert None not in [link_element, link_url], "Expected to find some elements before querying SHA1SUM"
 
 	###################################################################
 	# QUERY SHA1SUM
@@ -101,14 +150,24 @@ def main():
 	shasum_soup = BeautifulSoup(shasum_response.text, "lxml")
 	shasum_text = shasum_soup.get_text()
 	shasum_text_lines = shasum_text.split("\n")
-	sha1 = ""
-	for line in shasum_text_lines:
-		if base_name in line:
-			sha1 = line.split(" ")[0]
-	
-	if len(sha1) == 0:
-		print(f"Could not find SHA1SUM for {base_file}")
-		exit(1)
+	sha1_list = []
+	# for name in link_names:
+	for name in list(dataset.keys()):
+		sha1 = ""
+		for line in shasum_text_lines:
+			# if base_name in line:
+			if name in line:
+				sha1 = line.split(" ")[0]
+		
+		if len(sha1) == 0:
+			# print(f"Could not find SHA1SUM for {base_file}")
+			print(f"Could not find SHA1SUM for {name}")
+			if args.no_shasum:
+				print("Exited program due to inability to verify SHA1SUM.")
+				exit(1)
+
+		sha1_list.append(sha1)
+		dataset[name].append(sha1)
 
 	###################################################################
 	# DOWNLOAD FILE
@@ -120,12 +179,26 @@ def main():
 	if confirmation not in ["Y", "y"]:
 		exit(0)
 
-	print(f"Downloading {base_file} file...")
-	download_status = downloadFile(link_url, local_filepath, sha1)
+	# print(f"Downloading {base_file} file...")
+	# download_status = downloadFile(link_url, local_filepath, sha1)
 
 	# Verify file download was successful.
-	status = "successfully" if download_status else "not sucessfully"
-	print(f"Target file {base_file} was {status} downloaded.")
+	# status = "successfully" if download_status else "not sucessfully"
+	# print(f"Target file {base_file} was {status} downloaded.")
+
+	# for name in link_names:
+	for name in list(dataset.keys()):
+		print(f"Downloading {name} file...")
+		# download_status = downloadFile(link_url[idx], local_filepath, sha1)
+		download_status = downloadFile(
+			dataset[name][0],	# link url
+			dataset[name][1], 	# local filepath
+			dataset[name][2]	# SHA1 hash
+		)
+
+		# Verify file download was successful.
+		status = "successfully" if download_status else "not sucessfully"
+		print(f"Target file {name} was {status} downloaded and verified.")
 
 	# Exit the program.
 	exit(0)
