@@ -20,12 +20,17 @@ Description: Provides an interesting look at downloading and processing Wikipedi
 
 ### Usage
 
- - Lorem ipsum
  - Download Wikipedia data (`download.py`)
      - `python download.py [target] --shard --no_shasum`
-     - `--shard`: Specify whether to download the `[target]` via its shards or 
+     - `--shard`: Specify whether to download the `[target]` via its shards or the entire original file
+     - `--no_shasum`: Specify whether to verify the download(s) with the SHA1SUM
  - Preprocess the downloaded Wikipedia data (`preprocess.py`)
-     - 
+     - `python preprocess.py [target] --shard --no_clean`
+     - `--shard`: Specify whether to decompress the `[target]` via its shards or the entire original file
+     - `--no_clean`: Specify whether to remove all decompressed files from the file system
+ - For best results
+     - `python download.py all --shard --no_shasum`
+     - `python preprocess.py all --shard`
 
 
 ### Notes
@@ -46,10 +51,16 @@ Description: Provides an interesting look at downloading and processing Wikipedi
              - Expect to use at least 8 GB of RAM for the decompression
      - It is advised for the "pages" downloads that you use the shard flag. This will download each piece in shards (the data is broken up into shards on the main link) and process the shards accordingly. This uses significantly less RAM than downloading the entire compressed file and allows for multiprocessing.
          - In this [blog post](https://blog.online-convert.com/what-are-tar-gz-and-bz2/), gz (gzip) is faster and more memory efficent while bz2 (bzip2) is slower but produces smaller compressed files. All pages are saved in bz2 compressed files to maximize compression.
-         - You may want to pass
+         - You may want to pass `--no_shasum` to the download script because 1 of the compressed files does not have an entry in the SHA1SUM list online. This may have adverse affects if other files are downloaded but do not have matching SHA1SUM.
+ - Preprocessing consists of the following:
+     - Decompress the compressed file
+     - For each decompressed file, extract the main article and store each article to its won xml file
+     - Delete the decompressed file (optional)
+         - It is highly recommended that clean up is done to keep things running smoothly on the system.
  - Parsing documents
      - For pages-articles-multistream.xml files, each entry is contained within `<page>` tags
      - For abstract.xml.gz, each entry is contained with `<doc>` tags
+     - Within either of the preprocessed xml files, the tag with the most data is going to be the `<title>` and `<text>` tags. The `<links>` tag is also useful for constructing graphs or additional knowledge. Note that the text in the `<text>` tag may not be well formatted
 
 
 ### References
@@ -69,6 +80,7 @@ Description: Provides an interesting look at downloading and processing Wikipedi
  - Documentation of native python module used:
      - [argparse](https://docs.python.org/3.9/library/argparse.html)
      - [bz2](https://docs.python.org/3.9/library/bz2.html)
+     - [copy](https://docs.python.org/3.9/library/copy.html)
      - [gzip](https://docs.python.org/3.9/library/gzip.html)
      - [hashlib](https://docs.python.org/3.9/library/hashlib.html)
      - [os](https://docs.python.org/3.9/library/os.html)
