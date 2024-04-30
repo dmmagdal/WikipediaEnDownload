@@ -19,17 +19,17 @@ def main():
 		"target", 
 		nargs="?",
 		default="abstracts", 
-		help="Specify which (compressed) file you want to download. Default is 'abstracts'."
+		help="Specify which (compressed) file(s) you want to download. Default is 'abstracts'."
 	)
 	parser.add_argument(
 		"--shard",
 		action="store_true",
-		help="Specify whether to download the whole (compressed) file or the file in shards. Defaultis false/not specified."
+		help="Specify whether to download the whole (compressed) file or the file in shards. Default is false/not specified."
 	)
 	parser.add_argument(
 		"--no_shasum",
 		action="store_false",
-		help="Specify whether to verify the (compressed) file download(s) with the respective SHA1SUM hash. Defaultis true/not specified."
+		help="Specify whether to verify the (compressed) file download(s) with the respective SHA1SUM hash. Default is true/not specified."
 	)
 	args = parser.parse_args()
 
@@ -104,6 +104,7 @@ def main():
 			print(f"Could not find {base_file} in latest dump {url}")
 			exit(1)
 		
+		# Get link from the main page.
 		link_element = [link_element]
 	
 	# Map each file to the respective url, local filepath, and later
@@ -149,12 +150,13 @@ def main():
 				print("Exited program due to inability to verify SHA1SUM.")
 				exit(1)
 
+		# Add SHA1SUM to map.
 		files[name].append(sha1)
 
 	###################################################################
 	# DOWNLOAD FILE
 	###################################################################
-	# Initialize the file download,
+	# Initialize the file download.
 	print("WARNING!")
 	print("The compressed files downloaded can be as large as 25GB each. Please make sure you have enough disk space before proceeding.")
 	confirmation = input("Proceed? [Y/n] ")
@@ -165,7 +167,7 @@ def main():
 		print(f"Downloading {name} file...")
 		download_status = downloadFile(
 			files[name][0],	# link url
-			files[name][1], 	# local filepath
+			files[name][1], # local filepath
 			files[name][2]	# SHA1 hash
 		)
 
