@@ -54,7 +54,9 @@ Description: Provides an interesting look at downloading and processing Wikipedi
          - You may want to pass `--no_shasum` to the download script because 1 of the compressed files does not have an entry in the SHA1SUM list online. This may have adverse affects if other files are downloaded but do not have matching SHA1SUM.
  - Preprocessing consists of the following:
      - Decompress the compressed file
-     - For each decompressed file, extract the main article and store each article to its won xml file
+         - See decompression details above.
+     - For each decompressed file, extract the main article and store each article to its own xml file
+         - This part may take up a lot of space. It is recommended that the whole process is done on a cheap external drive with a lot of storage capacity.
      - Delete the decompressed file (optional)
          - It is highly recommended that clean up is done to keep things running smoothly on the system.
  - Parsing documents
