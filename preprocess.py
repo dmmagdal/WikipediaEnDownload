@@ -137,14 +137,8 @@ def main():
 		###############################################################
 		# CLEAN UP
 		###############################################################
-		# Prompt on whether to delete the decompressed copies of the
-		# compressed files.
-		# print("ALERT! (optional)")
-		# print("Clean up the files by deleting the decompressed copies of the compressed files? This will save on disk space.")
-		# confirmation = input("Delete? [Y/n] ")
-		# if confirmation not in ["Y", "y"]:
-		# 	exit(0)
-
+		# Use command line arguments on whether to delete the
+		# decompressed copies of the compressed files.
 		if args.no_clean:
 			# Delete the decompressed copies for the compressed files.
 			print("Deleting decompressed files...")
