@@ -211,7 +211,7 @@ def downloadFile(url: str, local_filepath: str, sha1: str) -> bool:
 
 def hashSum(local_filepath: str) -> str:
 	"""
-	Compure the SHA1SUM of the downloaded (compressed) file. This
+	Compute the SHA1SUM of the downloaded (compressed) file. This
 		confirms if the download was successful.
 	@param: local_filepath (str), the local path the compressed file is
 		going to be saved to.

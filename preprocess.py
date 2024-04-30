@@ -7,7 +7,9 @@
 
 import argparse
 import bz2
+import copy
 import gzip
+import hashlib
 import os
 from bs4 import BeautifulSoup
 
@@ -19,7 +21,17 @@ def main():
 		"target", 
 		nargs="?",
 		default="abstracts", 
-		help="Specify which (compressed) file you want to download. Default is 'abstracts'."
+		help="Specify which (compressed) file(s) you want to extract. Default is 'abstracts'."
+	)
+	parser.add_argument(
+		"--shard",
+		action="store_true",
+		help="Specify whether to download the whole (compressed) file or the file in shards. Default is false/not specified."
+	)
+	parser.add_argument(
+		"--clean",
+		action="store_false",
+		help="Specify whether to delete the decompressed file(s) once the preprocessing is done. Default is true/not specified."
 	)
 	args = parser.parse_args()
 
@@ -28,10 +40,10 @@ def main():
 	###################################################################
 	# Different mappings of targets to files.
 	target_mapping = {
-		"all": "enwiki-latest-pages-articles-multistream.xml.bz2",  # Current revisions only, no talk or user pages; this is probably what you want, and is over 19 GB compressed (expands to over 86 GB when decompressed).
-		"pages-meta": "en-wiki-latest-pages-meta-current.xml.bz2",	# Current revisions only, all pages (including talk)
-		"abstracts": "enwiki-latest-abstract.xml.gz",             	# Page abstracts
-		# "article-titles": "enwiki-latest-all-titles-in-ns0.gz",   	# Article titles only (with redirects)
+		"all": "pages-articles-multistream.xml.bz2",	# Current revisions only, no talk or user pages; this is probably what you want, and is over 19 GB compressed (expands to over 86 GB when decompressed).
+		"pages-meta": "pages-meta-current.xml.bz2",		# Current revisions only, all pages (including talk)
+		"abstracts": "abstract.xml.gz",             	# Page abstracts
+		# "article-titles": "all-titles-in-ns0.gz",   	# Article titles only (with redirects)
 		# "sha1sum": "enwiki-latest-sha1sums.txt",					# Sha1sums for latest wikis
 	}
 
@@ -52,9 +64,23 @@ def main():
 	# Folder and file path for downloads.
 	folder = "./CompressedDownloads"
 	base_file = target_mapping[target]
-	local_filepath = os.path.join(folder, base_file)
-	if not os.path.exists(local_filepath):
+	base_name = os.path.splitext(
+		os.path.splitext(os.path.basename(base_file))[0]	# gives base_name.xml
+	)[0]													# gives base_name
+	local_filepath = [os.path.join(folder, base_file)]
+
+	if args.shard:
+		local_filepath = [
+			os.path.join(folder, file) for file in os.listdir(folder)
+			if base_name in file and len(file) != len(base_file)
+		]
+
+	# Verify target filepath(s) exists.
+	if len(local_filepath) == 1 and not os.path.exists(local_filepath[0]):
 		print(f"Target file {local_filepath} was not found.")
+		exit(1)
+	elif len(local_filepath) == 0:
+		print(f"Shards for target file {local_filepath} were not found.")
 		exit(1)
 
 	# Folder and file path for output data files.
@@ -62,58 +88,78 @@ def main():
 	if not os.path.exists(output_folder) or not os.path.isdir(output_folder):
 		os.makedirs(output_folder, exist_ok=True)
 
-	###################################################################
-	# DECOMPRESSION
-	###################################################################
-	# Verify that the target file path is a supported compression
-	# format.
-	if not local_filepath.endswith(".gz") and not local_filepath.endswith(".bz2"):
-		print(f"Target compressed file path {local_filepath} is not in a supported by this script. Supporting only '.bz2' and '.gz' compressed files only.")
-		exit(0)
-
-	# Decompress the compressed file (if necessary).
-	decompressed_filepath = local_filepath.rstrip(".gz").rstrip(".bz2")
-	if not os.path.exists(decompressed_filepath):
-		# Initialize the file decompression.
-		print("WARNING!")
-		print("The compressed files downloaded can be as large as 100GB when decompressed. Please make sure you have enough disk space before proceeding.")
-		confirmation = input("Proceed? [Y/n] ")
-		if confirmation not in ["Y", "y"]:
-			exit(0)
-
-		if local_filepath.endswith(".gz"):
-			decompress_gz(local_filepath)
-		elif local_filepath.endswith(".bz2"):
-			decompress_bz2(local_filepath)
-
-	###################################################################
-	# PROCESSING
-	###################################################################
-	output_filepath = os.path.join(
-		output_folder, os.path.basename(decompressed_filepath)
-	)
-
-
-	###################################################################
-	# CLEAN UP
-	###################################################################
-	# Prompt on whether to delete the decompressed copies of the
-	# compressed files.
-	print("ALERT! (optional)")
-	print("Clean up the files by deleting the decompressed copies of the compressed files? This will save on disk space.")
-	confirmation = input("Delete? [Y/n] ")
+	# Confirm file decompression.
+	print("WARNING!")
+	print("The compressed files downloaded can be as large as 100GB when decompressed. Please make sure you have enough disk space before proceeding.")
+	confirmation = input("Proceed? [Y/n] ")
 	if confirmation not in ["Y", "y"]:
 		exit(0)
 
-	# Delete the decompressed copies for the compressed files.
-	print("Deleting decompressed files...")
-	files = [
-		os.path.join(folder, file) for file in os.listdir(folder) 
-		if file.endswith(".xml")
-	]
-	for file in files:
-		os.remove(file)
-		print(f"Deleted {file}")
+	# Iterate through the list of file paths.
+	for filepath in local_filepath:
+		###############################################################
+		# DECOMPRESSION
+		###############################################################
+		# Verify that the target file path is a supported compression
+		# format.
+		if not filepath.endswith(".gz") and not filepath.endswith(".bz2"):
+			print(f"Target compressed file path {filepath} is not in a supported by this script. Supporting only '.bz2' and '.gz' compressed files only.")
+			exit(0)
+
+		# Decompress the compressed file (if necessary).
+		decompressed_filepath = filepath.rstrip(".gz").rstrip(".bz2")
+		if not os.path.exists(decompressed_filepath):
+			if filepath.endswith(".gz"):
+				decompress_gz(filepath)
+			elif filepath.endswith(".bz2"):
+				decompress_bz2(filepath)
+
+		###############################################################
+		# PROCESSING
+		###############################################################
+		# Set the output filepath. For the filepath, use the file base 
+  		# name without the extension. We are using this as a base for
+		# each file we will create in preprocessing.
+		output_filepath = os.path.join(
+			output_folder, 
+			os.path.splitext(os.path.basename(decompressed_filepath))[0]
+		)
+		print(f"Output filepath: {output_filepath}")
+		print(f"Decompressed filepath: {decompressed_filepath}")
+
+		# NOTE:
+		# -> for abstracts, you can split each abstract into documents 
+		#	by <doc> tag.
+		# -> for the pages-articles-multistream, you can split each 
+		#	page into documents by the <> tag.
+		# Open the decompressed (xml) file and split each entry in the 
+		# file to its own xml file.
+		split_into_documents(decompressed_filepath, output_filepath)
+
+		###############################################################
+		# CLEAN UP
+		###############################################################
+		# Prompt on whether to delete the decompressed copies of the
+		# compressed files.
+		# print("ALERT! (optional)")
+		# print("Clean up the files by deleting the decompressed copies of the compressed files? This will save on disk space.")
+		# confirmation = input("Delete? [Y/n] ")
+		# if confirmation not in ["Y", "y"]:
+		# 	exit(0)
+
+		if args.clean:
+			# Delete the decompressed copies for the compressed files.
+			print("Deleting decompressed files...")
+			os.remove(decompressed_filepath)
+			print(f"Deleted {decompressed_filepath}")
+			# files = [
+			# 	os.path.join(folder, file) for file in os.listdir(folder) 
+			# 	if not file.endswith(".bz2") and not file.endswith(".bz")
+			# 	# if file.endswith(".xml")
+			# ]
+			# for file in files:
+			# 	os.remove(file)
+			# 	print(f"Deleted {file}")
 
 	print("Done.")
 
@@ -159,6 +205,77 @@ def decompress_gz(local_filepath: str) -> None:
 	assert os.path.exists(output_filepath), f"Decompression failed. Output {output_filepath} file was not created."
 
 	return
+
+
+def split_into_documents(local_filepath: str, output_filepath: str) -> None:
+	"""
+	Split the decompressed large xml file into smaller xml files that
+		are for individual pages/articles.
+	@param: local_filepath (str), the local path to the decompressed 
+		xml file.
+	@param: output_filepath (str), the output local path to the decompressed 
+		xml file.
+	@return: returns nothing.
+	"""
+	# Load the (xml) file contents.
+	with open(local_filepath, "r") as f:
+		file_contents = f.read()
+
+	# Use beautifulsoup to parse the (xml) file into multiple files for
+	# each entry. For the abstract, each entry is split by <doc> tag
+	# and for pages, each entry is split by <page> tag.
+	soup = BeautifulSoup(file_contents, "lxml")
+	docs = soup.find_all("doc")
+	pages =  soup.find_all("page")
+
+	# Assign a list of found elements (<docs> or <pages>) depending on
+	# what was picked up but beautifulsoup. If neither or both are
+	# found then we return early.
+	list_elements = None
+	if len(docs) == 0 and len(pages) > 0:
+		# Process the page.
+		list_elements = copy.deepcopy(pages)
+	elif len(pages) == 0 and len(docs) > 0:
+		# Process the abstract.
+		list_elements = copy.deepcopy(docs)
+	else:
+		# Return early. Accounts for no abstracts and pages or there
+		# are both abstracts and pages.
+		return
+	
+	# Iterate through each element, storing it to a file.
+	for element in list_elements:
+		# Compute the hash of the raw xml string.
+		hash = hashSum(str(element))
+
+		# Finalize the file output path.
+		file = output_filepath + "_" + hash + ".xml"
+
+		# Write the page in the output path.
+		with open(file, "w+") as f:
+			f.write(element.prettify())
+		
+		print(f"Created {file}")
+	
+	return
+
+
+def hashSum(data: str) -> str:
+	"""
+	Compute the SHA256SUM of the xml data. This is used as part of the
+		naming scheme down the road.
+	@param: data (str), the raw string data from the xml data.
+	@return: returns the SHA256SUM hash.
+	"""
+
+	# Initialize the SHA256 hash object.
+	sha256 = hashlib.sha256()
+
+	# Update the hash object with the (xml) data.
+	sha256.update(data)
+
+	# Return the digested hash object (string).
+	return sha256.hexdigest()
 
 
 if __name__ == '__main__':
