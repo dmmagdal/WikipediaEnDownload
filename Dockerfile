@@ -23,5 +23,6 @@ ADD . /wiki
 RUN python3 -m pip install --upgrade pip
 RUN pip3 install -r requirements.txt
 
-# Run the topic_modeling_lsa.py program.
+# Run the download.py program.
 CMD ["python3", "download.py", "all"]
+# CMD ["python3", "preprocess.py", "all"]
