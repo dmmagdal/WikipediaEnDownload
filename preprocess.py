@@ -29,7 +29,7 @@ def main():
 		help="Specify whether to download the whole (compressed) file or the file in shards. Default is false/not specified."
 	)
 	parser.add_argument(
-		"--clean",
+		"--no_clean",
 		action="store_false",
 		help="Specify whether to delete the decompressed file(s) once the preprocessing is done. Default is true/not specified."
 	)
@@ -124,14 +124,12 @@ def main():
 			output_folder, 
 			os.path.splitext(os.path.basename(decompressed_filepath))[0]
 		)
-		print(f"Output filepath: {output_filepath}")
-		print(f"Decompressed filepath: {decompressed_filepath}")
 
 		# NOTE:
 		# -> for abstracts, you can split each abstract into documents 
 		#	by <doc> tag.
 		# -> for the pages-articles-multistream, you can split each 
-		#	page into documents by the <> tag.
+		#	page into documents by the <page> tag.
 		# Open the decompressed (xml) file and split each entry in the 
 		# file to its own xml file.
 		split_into_documents(decompressed_filepath, output_filepath)
@@ -147,21 +145,18 @@ def main():
 		# if confirmation not in ["Y", "y"]:
 		# 	exit(0)
 
-		if args.clean:
+		if args.no_clean:
 			# Delete the decompressed copies for the compressed files.
 			print("Deleting decompressed files...")
-			os.remove(decompressed_filepath)
-			print(f"Deleted {decompressed_filepath}")
-			# files = [
-			# 	os.path.join(folder, file) for file in os.listdir(folder) 
-			# 	if not file.endswith(".bz2") and not file.endswith(".bz")
-			# 	# if file.endswith(".xml")
-			# ]
-			# for file in files:
-			# 	os.remove(file)
-			# 	print(f"Deleted {file}")
+			files = [
+				os.path.join(folder, file) for file in os.listdir(folder) 
+				if not file.endswith(".bz2") and not file.endswith(".bz")
+			]
+			for file in files:
+				os.remove(file)
+				print(f"Deleted {file}")
 
-	print("Done.")
+	print("Completed decompression and preprocessing.")
 
 	# Exit the program.
 	exit(0)
@@ -245,8 +240,11 @@ def split_into_documents(local_filepath: str, output_filepath: str) -> None:
 	
 	# Iterate through each element, storing it to a file.
 	for element in list_elements:
+		# Convert the element to a string.
+		element_str = str(element)
+
 		# Compute the hash of the raw xml string.
-		hash = hashSum(str(element))
+		hash = hashSum(element_str)
 
 		# Finalize the file output path.
 		file = output_filepath + "_" + hash + ".xml"
@@ -272,7 +270,7 @@ def hashSum(data: str) -> str:
 	sha256 = hashlib.sha256()
 
 	# Update the hash object with the (xml) data.
-	sha256.update(data)
+	sha256.update(data.encode('utf-8'))
 
 	# Return the digested hash object (string).
 	return sha256.hexdigest()
