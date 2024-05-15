@@ -238,7 +238,7 @@ def split_into_documents(local_filepath: str, output_filepath: str) -> None:
 		# For each chunk, convert the data to a string.
 		chunk = list_elements[idx:idx + chunk_size]
 		chunk_str = "".join(str(element) for element in chunk)
-		chunk_prettified = BeautifulSoup(chunk_str, "xml").prettify()
+		chunk_prettified = BeautifulSoup(chunk_str, "lxml").prettify()
 
 		# Compute the hash of the raw xml string.
 		hash = hashSum(chunk_str)
