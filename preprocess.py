@@ -231,23 +231,43 @@ def split_into_documents(local_filepath: str, output_filepath: str) -> None:
 		# Return early. Accounts for no abstracts and pages or there
 		# are both abstracts and pages.
 		return
-	
-	# Iterate through each element, storing it to a file.
-	for element in list_elements:
-		# Convert the element to a string.
-		element_str = str(element)
+
+	# Iterate through the list of elements and chunk the list.
+	chunk_size = 250_000
+	for idx in range(0, len(list_elements), chunk_size):
+		# For each chunk, convert the data to a string.
+		chunk = list_elements[idx:idx + chunk_size]
+		chunk_str = "".join(str(element) for element in chunk)
+		chunk_prettified = BeautifulSoup(chunk_str, "xml").prettify()
 
 		# Compute the hash of the raw xml string.
-		hash = hashSum(element_str)
+		hash = hashSum(chunk_str)
 
 		# Finalize the file output path.
 		file = output_filepath + "_" + hash + ".xml"
 
 		# Write the page in the output path.
 		with open(file, "w+") as f:
-			f.write(element.prettify())
+			f.write(chunk_prettified)
 		
 		print(f"Created {file}")
+	
+	# Iterate through each element, storing it to a file.
+	# for element in list_elements:
+	# 	# Convert the element to a string.
+	# 	element_str = str(element)
+
+	# 	# Compute the hash of the raw xml string.
+	# 	hash = hashSum(element_str)
+
+	# 	# Finalize the file output path.
+	# 	file = output_filepath + "_" + hash + ".xml"
+
+	# 	# Write the page in the output path.
+	# 	with open(file, "w+") as f:
+	# 		f.write(element.prettify())
+		
+	# 	print(f"Created {file}")
 	
 	return
 
