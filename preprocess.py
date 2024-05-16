@@ -233,13 +233,14 @@ def split_into_documents(local_filepath: str, output_filepath: str) -> None:
 		return
 	
 	# NOTE:
-	# Chunk size 250_000 resulted in output files that were above the
-	# 1 GB file limit set by the design specs. Using a chunk size of
-	# 100_000 was quite below the threshold, so 200_000 is the set
-	# chunk size.
+	# -> Chunk size 250_000 resulted in output files that were above 
+	#	the 1 GB file limit set by the design specs. 
+	# -> Chunk size of 200_000 resulted in an OOM error (for some 
+	#	reason).
+	# -> Chunk size of 100_000 was quite below the threshold.
 
 	# Iterate through the list of elements and chunk the list.
-	chunk_size = 200_000
+	chunk_size = 150_000
 	for idx in range(0, len(list_elements), chunk_size):
 		# For each chunk, convert the data to a string.
 		chunk = list_elements[idx:idx + chunk_size]
