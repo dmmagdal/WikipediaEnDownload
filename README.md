@@ -59,6 +59,7 @@ Description: Provides an interesting look at downloading and processing Wikipedi
          - This was revised from the 1 article to 1 xml file strategy, which produced A LOT of files but resulted in running out of storage. 
              - The working theory is that the overhead of creating each file scaled with the number of articles, which was in the millions when the 256GB external drive ran out of space. 
              - This should also make it easier to clear the files when you need to free up space. Takes less time to purge a few larger files than several smaller ones.
+             - Another benefit is that with fewer files to create, the preprocessing should go faster. File IO is a costly operation so performing this a few hundred times vs millions of times is a massive time saver.
              - The chunk size was arbitrarily determined based on the number of articles per compressed file while also balancing the size of the expected xml file (each file should be under 1GB so that it can be handled in NodeJS).
          - This part may take up a lot of space. It is recommended that the whole process is done on a cheap external drive with a lot of storage capacity.
      - Delete the decompressed file (optional)

@@ -231,9 +231,15 @@ def split_into_documents(local_filepath: str, output_filepath: str) -> None:
 		# Return early. Accounts for no abstracts and pages or there
 		# are both abstracts and pages.
 		return
+	
+	# NOTE:
+	# Chunk size 250_000 resulted in output files that were above the
+	# 1 GB file limit set by the design specs. Using a chunk size of
+	# 100_000 was quite below the threshold, so 200_000 is the set
+	# chunk size.
 
 	# Iterate through the list of elements and chunk the list.
-	chunk_size = 250_000
+	chunk_size = 200_000
 	for idx in range(0, len(list_elements), chunk_size):
 		# For each chunk, convert the data to a string.
 		chunk = list_elements[idx:idx + chunk_size]
