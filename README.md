@@ -55,7 +55,11 @@ Description: Provides an interesting look at downloading and processing Wikipedi
  - Preprocessing consists of the following:
      - Decompress the compressed file
          - See decompression details above.
-     - For each decompressed file, extract the main article and store each article to its own xml file
+     - For each decompressed file, extract a chunk of articles and store them to an xml file.
+         - This was revised from the 1 article to 1 xml file strategy, which produced A LOT of files but resulted in running out of storage. 
+             - The working theory is that the overhead of creating each file scaled with the number of articles, which was in the millions when the 256GB external drive ran out of space. 
+             - This should also make it easier to clear the files when you need to free up space. Takes less time to purge a few larger files than several smaller ones.
+             - The chunk size was arbitrarily determined based on the number of articles per compressed file while also balancing the size of the expected xml file (each file should be under 1GB so that it can be handled in NodeJS).
          - This part may take up a lot of space. It is recommended that the whole process is done on a cheap external drive with a lot of storage capacity.
      - Delete the decompressed file (optional)
          - It is highly recommended that clean up is done to keep things running smoothly on the system.
