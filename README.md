@@ -70,9 +70,22 @@ Description: Provides an interesting look at downloading and processing Wikipedi
      - Delete the decompressed file (optional)
          - It is highly recommended that clean up is done to keep things running smoothly on the system.
  - Parsing documents
-     - For pages-articles-multistream.xml files, each entry is contained within `<page>` tags
-     - For abstract.xml.gz, each entry is contained with `<doc>` tags
-     - Within either of the preprocessed xml files, the tag with the most data is going to be the `<title>` and `<text>` tags. The `<links>` tag is also useful for constructing graphs or additional knowledge. Note that the text in the `<text>` tag may not be well formatted
+     - For pages-articles-multistream.xml files, each entry is contained within `<page>` tags.
+     - For abstract.xml.gz, each entry is contained with `<doc>` tags.
+     - Within either of the preprocessed xml files, the tag with the most data is going to be the `<title>` and `<text>` tags. The `<links>` tag is also useful for constructing graphs or additional knowledge. Note that the text in the `<text>` tag may not be well formatted.
+ - Preprocessing output notes
+     - Chunked at 150,000 entries per file. Resulted in a few files larger than the 1 GB limit set be the spec. These files were primarily in the first 10 bz2 bundles (2, 3, 4, 5, 6).
+         - I can try again at 125,000 or 100,000 entries per file but that will probably balloon the number of files used (so that's another thing to consider).
+         - File(s) with the most offensive file size is 1.6 GB.
+     - Decompressed output files uses 95 GB in storage and created almost 200 files (195 to be exact).
+     - It took around 22 hours to complete the preprocessing.
+         - real	1314m30.630s
+         - user	1210m54.350s
+         - sys	100m25.085s
+     - Ran processing on my server for the sake of speed. Server had 64GB of RAM and 56 cores but the program was using a single thread/processor. Almost all of the 64GB of RAM was utilized (I suspect for the decompression step in preprocessing). Still, no special hardware is really needed outside of the required memory. Project is still able to run on "consumer hardware" for anyone to repeat/replicate.
+ - Link to dataset on Huggingface:
+     - [compressed xml files](https://huggingface.co/datasets/dmmagdal/enwiki-2024-04-20)
+     - [chunked decompressed xml files](https://huggingface.co/datasets/dmmagdal/enwiki-2024-04-20-xml)
 
 
 ### References

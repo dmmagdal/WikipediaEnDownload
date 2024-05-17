@@ -103,8 +103,8 @@ def main():
 		# Verify that the target file path is a supported compression
 		# format.
 		if not filepath.endswith(".gz") and not filepath.endswith(".bz2"):
-			print(f"Target compressed file path {filepath} is not in a supported by this script. Supporting only '.bz2' and '.gz' compressed files only.")
-			exit(0)
+			print(f"Target compressed file path {filepath} is not in a supported by this script. Supporting only '.bz2' and '.gz' compressed files only. - Skipping file.")
+			continue
 
 		# Decompress the compressed file (if necessary).
 		decompressed_filepath = filepath.rstrip(".gz").rstrip(".bz2")
