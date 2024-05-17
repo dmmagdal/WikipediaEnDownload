@@ -61,6 +61,11 @@ Description: Provides an interesting look at downloading and processing Wikipedi
              - This should also make it easier to clear the files when you need to free up space. Takes less time to purge a few larger files than several smaller ones.
              - Another benefit is that with fewer files to create, the preprocessing should go faster. File IO is a costly operation so performing this a few hundred times vs millions of times is a massive time saver.
              - The chunk size was arbitrarily determined based on the number of articles per compressed file while also balancing the size of the expected xml file (each file should be under 1GB so that it can be handled in NodeJS).
+                 - Note that according to the NodeJS documentation (as of [v18](https://nodejs.org/docs/v18.0.0/api/buffer.html#buffer-constants) to [v22](https://nodejs.org/api/buffer.html#buffer-constants) which is current latest version), the buffer threshold is 1GB on 32-bit systems or 4GB on 64-bit systems ([v14](https://nodejs.org/docs/v14.0.0/api/buffer.html#buffer_buffer_constants) has a threshold of 2GB on 64-bit systems).
+                 - Sources on maximum buffer sizes for loading files:
+                     - Processing large file and nodes and memory limit in nodejs [stackoverflow](https://stackoverflow.com/questions/63553223/processing-large-file-and-nodes-and-memory-limit-in-nodejs#:~:text=Node%20documentation%20states%20the%20maximum,js.)
+                     - What's the maximum size of a Node.js Buffer [stackoverflow](https://stackoverflow.com/questions/8974375/whats-the-maximum-size-of-a-node-js-buffer#:~:text=Maximum%20length%20of%20a%20typed,2Gb%20%2D%201byte%20on%2064%2Dbit)
+                     - Parsing large xml files (1G+) in node.js [stackoverflow](https://stackoverflow.com/questions/52314871/parsing-large-xml-files-1g-in-node-js)
          - This part may take up a lot of space. It is recommended that the whole process is done on a cheap external drive with a lot of storage capacity.
      - Delete the decompressed file (optional)
          - It is highly recommended that clean up is done to keep things running smoothly on the system.

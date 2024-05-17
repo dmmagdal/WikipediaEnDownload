@@ -237,7 +237,18 @@ def split_into_documents(local_filepath: str, output_filepath: str) -> None:
 	#	the 1 GB file limit set by the design specs. 
 	# -> Chunk size of 200_000 resulted in an OOM error (for some 
 	#	reason).
+	# -> Chunk size of 150_000 resulted in almost all of the output
+	#	xml files with the exception of 1 that was only 1.6 GB. At the
+	#	time of writing this, it may not be a big deal for the JS 
+	#	implementation of the search engine, but this can be confirmed
+	#	later.
 	# -> Chunk size of 100_000 was quite below the threshold.
+	# TODO:
+	# Verify that the preprocessed (decompressed xml) file(s) over 1GB
+	# in size are able to be read and further preprocessed by the 
+	# search engine in the JS implementation. If so, adjust the chunk
+	# size to 125_000 or 100_000 and rerun to confirm that all the xml
+	# files are under the 1GB limit.
 
 	# Iterate through the list of elements and chunk the list.
 	chunk_size = 150_000
