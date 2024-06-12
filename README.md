@@ -101,6 +101,10 @@ Description: Provides an interesting look at downloading and processing Wikipedi
      - all-titles-in-ns0.gz –> Article titles only (with redirects)
      - SQL files for the pages and links are also available
      - All revisions, all pages: These files expand to multiple terabytes of text. Please only download these if you know you can cope with this quantity of data. Go to Latest Dumps and look out for all the files that have 'pages-meta-history' in their name.
+     - Alternative English Wikipedia dump ([cirrussearch](https://dumps.wikimedia.org/other/cirrussearch/current/))
+         - Use enwiki-\[DATE\]-cirrussearch-content.json.gz
+         - Is 40 GB all compressed
+         - Downloader currently not implemented in this repo
  - BeautifulSoup [documentation](https://beautiful-soup-4.readthedocs.io/en/latest/)
  - Documentation of native python module used:
      - [argparse](https://docs.python.org/3.9/library/argparse.html)
