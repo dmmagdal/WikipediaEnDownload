@@ -11,6 +11,8 @@ import copy
 import gzip
 import hashlib
 import os
+import shutil
+
 from bs4 import BeautifulSoup
 
 
@@ -45,6 +47,7 @@ def main():
 		"abstracts": "abstract.xml.gz",             	# Page abstracts
 		# "article-titles": "all-titles-in-ns0.gz",   	# Article titles only (with redirects)
 		# "sha1sum": "enwiki-latest-sha1sums.txt",					# Sha1sums for latest wikis
+		"category-links": "categorylinks.sql.gz",		# Current category links, used for building category tree; is over 3GB compressed (expands to 20 GB uncomproessed)
 	}
 
 	# NOTE:
@@ -132,7 +135,14 @@ def main():
 		#	page into documents by the <page> tag.
 		# Open the decompressed (xml) file and split each entry in the 
 		# file to its own xml file.
-		split_into_documents(decompressed_filepath, output_filepath)
+		if "sql" not in base_file:
+			split_into_documents(decompressed_filepath, output_filepath)
+		else:
+			output_filepath = os.path.join(
+				output_folder,
+				os.path.basename(decompressed_filepath)
+			)
+			shutil.move(decompressed_filepath, output_filepath)
 
 		###############################################################
 		# CLEAN UP

@@ -8,6 +8,7 @@
 import argparse
 import hashlib
 import os
+
 from bs4 import BeautifulSoup
 import requests
 
@@ -46,6 +47,7 @@ def main():
 		"abstracts": "enwiki-latest-abstract.xml.gz",             	# Page abstracts
 		"article-titles": "enwiki-latest-all-titles-in-ns0.gz",   	# Article titles only (with redirects)
 		"sha1sum": "enwiki-latest-sha1sums.txt",					# Sha1sums for latest wikis
+		"category-links": "enwiki-latest-categorylinks.sql.gz",		# Current category links, used for building category tree; is over 3GB compressed (expands to 20 GB uncomproessed)
 	}
 	has_shards = [
 		key for key, value in target_mapping.items()
